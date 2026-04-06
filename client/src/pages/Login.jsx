@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -24,10 +25,9 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const user = await login(email, password);
-            // Redirect based on role
-            if (user.role === 'admin') navigate('/admin/dashboard');
-            else if (user.role === 'hospital') navigate('/hospital/dashboard');
+            const userData = await login(email, password);
+            if (userData.role === 'admin') navigate('/admin/dashboard');
+            else if (userData.role === 'hospital') navigate('/hospital/dashboard');
             else navigate('/doctor/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to login');
@@ -38,75 +38,146 @@ const Login = () => {
 
     return (
         <div className="min-h-[calc(100vh-160px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]" />
 
-            {/* Decorative background */}
-            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
+            {/* Decorative blobs */}
+            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[var(--color-primary)]/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[var(--color-accent)]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl z-10 border border-slate-100">
-                <div>
-                    <div className="mx-auto h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center">
-                        <Briefcase className="h-8 w-8 text-primary" />
+            <div className="max-w-md w-full relative z-10">
+                {/* Glass card */}
+                <div className="glass-card rounded-3xl p-8 md:p-10 fade-in">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="relative inline-flex items-center justify-center mb-4">
+                            <div className="absolute inset-0 bg-[var(--color-primary)] rounded-2xl blur opacity-30" />
+                            <div className="relative h-16 w-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-2xl flex items-center justify-center">
+                                <Briefcase className="h-8 w-8 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-bold text-[var(--color-text-primary)]">
+                            Welcome back
+                        </h2>
+                        <p className="mt-2 text-[var(--color-text-secondary)]">
+                            Sign in to access your DrHire account
+                        </p>
                     </div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-                        Welcome back
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-slate-500">
-                        Sign in to access your DrHire account
-                    </p>
-                </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    {/* Error message */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
                             {error}
                         </div>
                     )}
 
-                    <div className="space-y-4">
+                    {/* Form */}
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        {/* Email */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="email">Email address</label>
-                            <input
-                                id="email"
-                                type="email"
-                                required
-                                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                placeholder="Dr. John Doe / Hospital Name"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
+                            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                                Email address
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="email"
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="input pr-4"
+                                    placeholder="doctor@example.com"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1" htmlFor="password">Password</label>
-                            <input
-                                id="password"
-                                type="password"
-                                required
-                                className="appearance-none relative block w-full px-3 py-3 border border-slate-300 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </div>
 
-                    <div>
+                        {/* Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="input pr-12"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Remember me & Forgot password */}
+                        <div className="flex items-center justify-between text-sm">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" className="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]" />
+                                <span className="text-[var(--color-text-secondary)]">Remember me</span>
+                            </label>
+                            <Link to="/forgot-password" className="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium">
+                                Forgot password?
+                            </Link>
+                        </div>
+
+                        {/* Submit button */}
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${isLoading ? 'bg-indigo-400' : 'bg-primary hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors`}
+                            className="btn btn-primary w-full py-3.5 text-base"
                         >
-                            {isLoading ? 'Signing in...' : 'Sign in'}
+                            {isLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    Signing in...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    Sign in
+                                    <ArrowRight className="h-5 w-5" />
+                                </span>
+                            )}
                         </button>
-                    </div>
-                </form>
+                    </form>
 
-                <div className="text-center mt-6">
-                    <p className="text-sm text-slate-600">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="font-medium text-primary hover:text-indigo-500">
-                            Sign up
-                        </Link>
+                    {/* Divider */}
+                    <div className="relative my-8">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-[var(--color-border)]" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+                                Don't have an account?
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Register link */}
+                    <Link
+                        to="/register"
+                        className="btn btn-secondary w-full py-3.5 text-base"
+                    >
+                        Create an account
+                    </Link>
+
+                    {/* Admin hint */}
+                    <p className="mt-6 text-center text-xs text-[var(--color-text-muted)]">
+                        Admin access: Press Ctrl+1 on any page
                     </p>
                 </div>
             </div>

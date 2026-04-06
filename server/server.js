@@ -11,7 +11,8 @@ import applicationRoutes from './routes/applicationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
-
+import dns from "node:dns/promises";
+dns.setServers(["1.1.1.1", "1.0.0.1"]);
 // Connect to database
 connectDB();
 

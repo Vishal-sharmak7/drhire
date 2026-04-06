@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Building2, MapPin, Briefcase, DollarSign, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Building2, MapPin, Briefcase, DollarSign, Clock, CheckCircle, ArrowLeft, Award, Users, Calendar } from 'lucide-react';
 
 const JobDetails = () => {
     const { id } = useParams();
@@ -33,9 +33,8 @@ const JobDetails = () => {
         }
         setApplying(true);
         try {
-            await axios.post(`/api/apply/${id}`);
-            setApplyMessage({ text: 'Successfully applied!', type: 'success' });
-            // Update local state to instantly reflect the apply action
+            await axios.post(`/api/applications/${id}`);
+            setApplyMessage({ text: 'Application submitted successfully!', type: 'success' });
             setJob(prev => ({
                 ...prev,
                 applicants: [...(prev.applicants || []), user._id]
@@ -47,135 +46,172 @@ const JobDetails = () => {
             });
         } finally {
             setApplying(false);
+            setTimeout(() => setApplyMessage({ text: '', type: '' }), 5000);
         }
     };
 
     if (loading) {
-        return <div className="h-screen flex justify-center items-center"><div className="animate-spin h-10 w-10 border-b-2 border-primary rounded-full"></div></div>;
+        return (
+            <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center">
+                <div className="h-12 w-12 border-4 border-[var(--color-primary)]/20 border-t-[var(--color-primary)] rounded-full animate-spin" />
+            </div>
+        );
     }
 
     if (!job) {
-        return <div className="p-8 text-center text-slate-500">Job not found</div>;
+        return (
+            <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Job Not Found</h2>
+                    <p className="text-[var(--color-text-secondary)] mb-6">The job you're looking for doesn't exist or has been removed.</p>
+                    <Link to="/jobs" className="btn btn-primary">
+                        Browse All Jobs
+                    </Link>
+                </div>
+            </div>
+        );
     }
 
+    const hasApplied = job?.applicants?.some(a => a === user?._id || a?._id === user?._id);
+
     return (
-        <div className="bg-slate-50 min-h-screen py-10">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Link to="/jobs" className="flex items-center text-slate-500 hover:text-primary mb-6 transition-colors">
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to jobs
+        <div className="min-h-screen bg-[var(--color-bg-secondary)] pb-12">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Link to="/jobs" className="inline-flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-6">
+                    <ArrowLeft className="h-4 w-4" /> Back to jobs
                 </Link>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    {/* Header */}
-                    <div className="bg-indigo-900 border-b border-slate-200 p-8 sm:p-10 text-white relative">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
-                            <div>
-                                <span className="bg-white/20 text-indigo-50 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 inline-block">
-                                    {job.specialization}
-                                </span>
-                                <h1 className="text-3xl sm:text-4xl font-bold mb-4">{job.title}</h1>
-                                <div className="flex flex-wrap items-center gap-6 text-indigo-100">
-                                    <div className="flex items-center">
-                                        <Building2 className="h-5 w-5 mr-2" />
-                                        {job.hospitalId?.hospitalName}
+                <div className="card overflow-hidden fade-in">
+                    <div className="relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]" />
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+
+                        <div className="relative z-10 p-8 sm:p-10">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                                <div className="text-white">
+                                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-4">
+                                        <Award className="h-4 w-4" />
+                                        <span className="text-sm font-medium">{job.specialization}</span>
                                     </div>
-                                    <div className="flex items-center">
-                                        <MapPin className="h-5 w-5 mr-2" />
-                                        {job.location}
+
+                                    <h1 className="text-3xl sm:text-4xl font-bold mb-4">{job.title}</h1>
+
+                                    <div className="flex flex-wrap items-center gap-6 text-white/80">
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="h-5 w-5" />
+                                            <span>{job.hospitalId?.hospitalName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-5 w-5" />
+                                            <span>{job.location}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex-shrink-0">
+                                    <div className="h-20 w-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/30">
+                                        <span className="text-3xl font-bold text-white">{job.hospitalId?.hospitalName?.charAt(0)}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {/* Background design */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-30 -mr-20 -mt-20"></div>
                     </div>
 
                     <div className="p-8 sm:p-10">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-
-                            {/* Main Content */}
-                            <div className="md:col-span-2 space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                            <div className="lg:col-span-2 space-y-8">
                                 <section>
-                                    <h2 className="text-xl font-bold text-slate-900 border-b pb-2 mb-4">Job Description</h2>
-                                    <div className="text-slate-600 leading-relaxed whitespace-pre-wrap">
-                                        {job.description}
-                                    </div>
+                                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">Job Description</h2>
+                                    <div className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">{job.description}</div>
                                 </section>
 
-                                <section>
-                                    <h2 className="text-xl font-bold text-slate-900 border-b pb-2 mb-4">Hospital Information</h2>
-                                    <div className="text-slate-600 bg-slate-50 p-6 rounded-xl border border-slate-100">
-                                        <h3 className="font-semibold text-slate-800 mb-2">{job.hospitalId?.hospitalName}</h3>
-                                        <p>{job.hospitalId?.description || 'A top-rated healthcare institution dedicated to providing excellent patient care and advancing medical research.'}</p>
+                                <section className="pt-6 border-t border-[var(--color-border)]">
+                                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">About the Hospital</h2>
+                                    <div className="card p-6 bg-[var(--color-bg-secondary)]/50">
+                                        <div className="flex items-start gap-4">
+                                            <div className="h-14 w-14 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                                                {job.hospitalId?.hospitalName?.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-[var(--color-text-primary)] text-lg">{job.hospitalId?.hospitalName}</h3>
+                                                <p className="text-[var(--color-text-secondary)] mt-1">{job.hospitalId?.description || 'A leading healthcare institution committed to providing exceptional patient care.'}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </section>
                             </div>
 
-                            {/* Sidebar */}
                             <div className="space-y-6">
-                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-4">
-                                    <h3 className="font-semibold text-slate-900 mb-2">Job Overview</h3>
+                                <div className="card p-6 bg-[var(--color-bg-secondary)]/50">
+                                    <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Job Overview</h3>
 
-                                    <div className="flex items-start">
-                                        <Briefcase className="h-5 w-5 text-indigo-500 mr-3 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-900">Experience</p>
-                                            <p className="text-sm text-slate-500">{job.experienceRequired}+ years required</p>
+                                    <div className="space-y-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-10 w-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center"><Briefcase className="h-5 w-5 text-[var(--color-primary)]" /></div>
+                                            <div>
+                                                <p className="text-sm font-medium text-[var(--color-text-primary)]">Experience Required</p>
+                                                <p className="text-sm text-[var(--color-text-secondary)]">{job.experienceRequired}+ years</p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex items-start">
-                                        <DollarSign className="h-5 w-5 text-indigo-500 mr-3 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-900">Salary Range</p>
-                                            <p className="text-sm text-slate-500">{job.salaryRange || 'Competitive Based on Experience'}</p>
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-10 w-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center"><DollarSign className="h-5 w-5 text-[var(--color-primary)]" /></div>
+                                            <div>
+                                                <p className="text-sm font-medium text-[var(--color-text-primary)]">Salary Range</p>
+                                                <p className="text-sm text-[var(--color-text-secondary)]">{job.salaryRange || 'Competitive'}</p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex items-start">
-                                        <Clock className="h-5 w-5 text-indigo-500 mr-3 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-900">Posted on</p>
-                                            <p className="text-sm text-slate-500">{new Date(job.createdAt).toLocaleDateString()}</p>
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-10 w-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center"><Calendar className="h-5 w-5 text-[var(--color-primary)]" /></div>
+                                            <div>
+                                                <p className="text-sm font-medium text-[var(--color-text-primary)]">Posted On</p>
+                                                <p className="text-sm text-[var(--color-text-secondary)]">{new Date(job.createdAt).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-3">
+                                            <div className="h-10 w-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center"><Users className="h-5 w-5 text-[var(--color-primary)]" /></div>
+                                            <div>
+                                                <p className="text-sm font-medium text-[var(--color-text-primary)]">Applicants</p>
+                                                <p className="text-sm text-[var(--color-text-secondary)]">{job.applicants?.length || 0} applied</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-4">
+                                <div className="card p-6">
+                                    <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Apply for this Position</h3>
+
                                     {user?.role === 'doctor' ? (
                                         <div className="space-y-4">
-                                            {job?.applicants?.some(a => a === user._id || a._id === user._id) ? (
-                                                <button disabled className="w-full py-4 px-6 rounded-xl font-bold text-green-700 bg-green-50 shadow-sm transition-all flex items-center justify-center">
-                                                    <CheckCircle className="h-5 w-5 mr-2" /> Already Applied
-                                                </button>
+                                            {hasApplied ? (
+                                                <div className="flex items-center justify-center gap-2 py-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                                                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                                    <span className="font-semibold text-emerald-700">Application Submitted</span>
+                                                </div>
                                             ) : (
-                                                <button
-                                                    onClick={handleApply}
-                                                    disabled={applying}
-                                                    className={`w-full py-4 px-6 rounded-xl font-bold text-white shadow-lg transition-all ${applying ? 'bg-indigo-400' : 'bg-primary hover:bg-indigo-700 hover:-translate-y-1'}`}
-                                                >
-                                                    {applying ? 'Applying...' : 'Apply for this position'}
+                                                <button onClick={handleApply} disabled={applying} className="btn btn-primary w-full py-4">
+                                                    {applying ? 'Submitting...' : 'Apply Now'}
                                                 </button>
                                             )}
+
                                             {applyMessage.text && (
-                                                <div className={`p-4 rounded-lg flex items-center ${applyMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                                    {applyMessage.type === 'success' && <CheckCircle className="h-5 w-5 mr-2" />}
+                                                <div className={`p-4 rounded-xl flex items-center gap-2 ${applyMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                                    {applyMessage.type === 'success' && <CheckCircle className="h-5 w-5" />}
                                                     {applyMessage.text}
                                                 </div>
                                             )}
                                         </div>
                                     ) : user?.role === 'hospital' ? (
-                                        <div className="bg-blue-50 text-blue-700 p-4 rounded-xl border border-blue-100 text-sm">
-                                            You are logged in as a hospital. Only doctors can apply to jobs.
+                                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                            <p className="text-amber-700 text-sm">You are logged in as a hospital. Only doctors can apply to jobs.</p>
                                         </div>
                                     ) : (
-                                        <Link to="/login" className="block w-full text-center bg-primary hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-colors">
-                                            Log in to apply
-                                        </Link>
+                                        <Link to="/login" className="btn btn-primary w-full">Log in to Apply</Link>
                                     )}
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>

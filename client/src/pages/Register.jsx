@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, Building2, Stethoscope } from 'lucide-react';
+import { Briefcase, Building2, Stethoscope, User, Mail, Lock, Award, MapPin, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 
 const Register = () => {
-    const [role, setRole] = useState('doctor'); // 'doctor' or 'hospital'
+    const [role, setRole] = useState('doctor');
+    const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         name: '',
         hospitalName: '',
@@ -65,92 +66,145 @@ const Register = () => {
         }
     };
 
+    const doctorFields = [
+        { name: 'name', type: 'text', placeholder: 'Full Name', icon: User, required: true },
+        { name: 'email', type: 'email', placeholder: 'Email Address', icon: Mail, required: true },
+        { name: 'password', type: 'password', placeholder: 'Create Password', icon: Lock, required: true },
+        { name: 'specialization', type: 'text', placeholder: 'Specialization (e.g. Cardiologist)', icon: Award, required: true },
+        { name: 'experience', type: 'number', placeholder: 'Years of Experience', icon: Clock, required: true },
+        { name: 'licenseNumber', type: 'text', placeholder: 'Medical License Number', icon: CheckCircle2, required: true },
+    ];
+
+    const hospitalFields = [
+        { name: 'hospitalName', type: 'text', placeholder: 'Hospital / Organization Name', icon: Building2, required: true },
+        { name: 'email', type: 'email', placeholder: 'Organization Email', icon: Mail, required: true },
+        { name: 'password', type: 'password', placeholder: 'Create Password', icon: Lock, required: true },
+        { name: 'location', type: 'text', placeholder: 'Location / Address', icon: MapPin, required: true },
+    ];
+
+    const currentFields = role === 'doctor' ? doctorFields : hospitalFields;
+
     return (
         <div className="min-h-[calc(100vh-160px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl z-10 border border-slate-100">
-                <div className="text-center">
-                    <Briefcase className="mx-auto h-12 w-12 text-primary" />
-                    <h2 className="mt-4 text-3xl font-extrabold text-slate-900">
-                        Create an account
-                    </h2>
-                    <p className="mt-2 text-sm text-slate-500">
-                        Join DrHire to find your next opportunity or hire top talent.
-                    </p>
-                </div>
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]" />
 
-                {/* Role Selection */}
-                <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button
-                        onClick={() => setRole('doctor')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${role === 'doctor' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Stethoscope className="w-4 h-4 inline mr-2" />
-                        I'm a Doctor
-                    </button>
-                    <button
-                        onClick={() => setRole('hospital')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${role === 'hospital' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Building2 className="w-4 h-4 inline mr-2" />
-                        I'm a Hospital
-                    </button>
-                </div>
+            {/* Decorative blobs */}
+            <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-[var(--color-primary)]/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-[var(--color-accent)]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-                <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-                    {error && <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>}
+            <div className="max-w-lg w-full relative z-10">
+                {/* Glass card */}
+                <div className="glass-card rounded-3xl p-8 md:p-10 fade-in">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="relative inline-flex items-center justify-center mb-4">
+                            <div className="absolute inset-0 bg-[var(--color-primary)] rounded-2xl blur opacity-30" />
+                            <div className="relative h-16 w-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-2xl flex items-center justify-center">
+                                <Briefcase className="h-8 w-8 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-bold text-[var(--color-text-primary)]">
+                            Create Account
+                        </h2>
+                        <p className="mt-2 text-[var(--color-text-secondary)]">
+                            Join DrHire and start your journey
+                        </p>
+                    </div>
 
-                    {role === 'doctor' ? (
-                        <>
-                            <div>
-                                <input name="name" type="text" required placeholder="Full Name" value={formData.name} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="email" type="email" required placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="password" type="password" required placeholder="Password" value={formData.password} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="specialization" type="text" required placeholder="Specialization (e.g. Cardiologist)" value={formData.specialization} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div className="flex gap-4">
-                                <input name="experience" type="number" required placeholder="Years of Exp." value={formData.experience} onChange={handleChange} className="w-1/2 px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                                <input name="licenseNumber" type="text" required placeholder="License No." value={formData.licenseNumber} onChange={handleChange} className="w-1/2 px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div>
-                                <input name="hospitalName" type="text" required placeholder="Hospital / Organization Name" value={formData.hospitalName} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="email" type="email" required placeholder="Organization Email Address" value={formData.email} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="password" type="password" required placeholder="Password" value={formData.password} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                            <div>
-                                <input name="location" type="text" required placeholder="Location / Address" value={formData.location} onChange={handleChange} className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm" />
-                            </div>
-                        </>
+                    {/* Role Selection */}
+                    <div className="grid grid-cols-2 gap-3 p-1 bg-[var(--color-bg-tertiary)] rounded-2xl mb-6">
+                        <button
+                            onClick={() => setRole('doctor')}
+                            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all ${
+                                role === 'doctor'
+                                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-primary)] shadow-md'
+                                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                            }`}
+                        >
+                            <Stethoscope className="w-4 h-4" />
+                            Doctor
+                        </button>
+                        <button
+                            onClick={() => setRole('hospital')}
+                            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all ${
+                                role === 'hospital'
+                                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-primary)] shadow-md'
+                                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                            }`}
+                        >
+                            <Building2 className="w-4 h-4" />
+                            Hospital
+                        </button>
+                    </div>
+
+                    {/* Error message */}
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">
+                            {error}
+                        </div>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full py-3 px-4 flex justify-center text-sm font-medium rounded-lg text-white ${isLoading ? 'bg-indigo-400' : 'bg-primary hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors`}
-                    >
-                        {isLoading ? 'Creating account...' : `Register as ${role === 'doctor' ? 'Doctor' : 'Hospital'}`}
-                    </button>
-                </form>
+                    {/* Form */}
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                        <div className="grid gap-4">
+                            {currentFields.map((field) => (
+                                <div key={field.name} className="relative">
+                                    <field.icon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--color-text-muted)]" />
+                                    <input
+                                        type={field.type}
+                                        name={field.name}
+                                        required={field.required}
+                                        placeholder={field.placeholder}
+                                        value={formData[field.name]}
+                                        onChange={handleChange}
+                                        className="input pl-12"
+                                    />
+                                </div>
+                            ))}
+                        </div>
 
-                <div className="text-center mt-6">
-                    <p className="text-sm text-slate-600">
-                        Already have an account?{' '}
-                        <Link to="/login" className="font-medium text-primary hover:text-indigo-500">
-                            Sign in
-                        </Link>
-                    </p>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="btn btn-primary w-full py-3.5 mt-6"
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    Creating account...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    Create Account
+                                    <ArrowRight className="h-5 w-5" />
+                                </span>
+                            )}
+                        </button>
+                    </form>
+
+                    {/* Divider */}
+                    <div className="relative my-8">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-[var(--color-border)]" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
+                                Already have an account?
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Login link */}
+                    <Link
+                        to="/login"
+                        className="btn btn-secondary w-full py-3.5"
+                    >
+                        Sign in to your account
+                    </Link>
                 </div>
             </div>
         </div>

@@ -41,11 +41,7 @@ const AdminDashboard = () => {
     const handleApprove = async (id) => {
         try {
             const { data } = await axios.put(`http://localhost:5000/api/admin/approve/${id}`);
-
-            // Remove from pending
             setPendingHospitalsState(prev => prev.filter(h => h._id !== id));
-
-            // Add or update in verified hospitals list
             setHospitals(prev => {
                 const exists = prev.find(h => h._id === id);
                 if (exists) {
@@ -54,261 +50,293 @@ const AdminDashboard = () => {
                     return [...prev, data];
                 }
             });
-
-            alert('Hospital approved successfully');
         } catch (error) {
             alert('Failed to approve hospital');
         }
     };
 
-    console.log("ADMIN:", user);
-    console.log("USERS:", users);
-    console.log("HOSPITALS:", hospitals);
-    console.log("JOBS:", jobs);
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center">
+                <div className="h-12 w-12 border-4 border-[var(--color-primary)]/20 border-t-[var(--color-primary)] rounded-full animate-spin" />
+            </div>
+        );
+    }
 
-    if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-b-2 border-primary rounded-full"></div></div>;
-    if (!user) return <div>No admin data</div>;
-    if (user?.role !== "admin") {
+    if (!user || user?.role !== "admin") {
         return <Navigate to="/" />;
     }
 
-    try {
-        const pendingHospitals = pendingHospitalsState;
-        const verifiedHospitals = (hospitals || []).filter(h => h.status === 'approved');
+    const pendingHospitals = pendingHospitalsState;
+    const verifiedHospitals = (hospitals || []).filter(h => h.status === 'approved');
 
-        const renderSidebarItem = (id, icon, label, badgeCount) => (
-            <button
-                onClick={() => setActiveTab(id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${activeTab === id
-                    ? 'bg-primary text-white shadow-md shadow-indigo-200'
-                    : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-            >
-                {icon}
-                <span>{label}</span>
-                {badgeCount > 0 && (
-                    <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === id ? 'bg-white text-primary' : 'bg-rose-100 text-rose-600'
-                        }`}>
-                        {badgeCount}
-                    </span>
+    const renderSidebarItem = (id, icon, label, badgeCount) => (
+        <button
+            onClick={() => setActiveTab(id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
+                activeTab === id
+                    ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary-glow)]'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+            }`}
+        >
+            {icon}
+            <span>{label}</span>
+            {badgeCount > 0 && (
+                <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-bold ${
+                    activeTab === id ? 'bg-white text-[var(--color-primary)]' : 'bg-rose-100 text-rose-600'
+                }`}>
+                    {badgeCount}
+                </span>
+            )}
+        </button>
+    );
+
+    return (
+        <div className="flex h-[calc(100vh-64px)] bg-[var(--color-bg-secondary)] overflow-hidden">
+            {/* Sidebar */}
+            <aside className="w-64 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] p-6 flex flex-col gap-2 overflow-y-auto hidden md:flex">
+                <div className="flex items-center gap-3 mb-6 px-4">
+                    <div className="h-10 w-10 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center">
+                        <ShieldCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Admin</h2>
+                </div>
+                {renderSidebarItem('overview', <LayoutDashboard className="h-5 w-5" />, 'Overview')}
+                {renderSidebarItem('approvals', <FileCheck className="h-5 w-5" />, 'Approvals', pendingHospitals.length)}
+                {renderSidebarItem('hospitals', <Building2 className="h-5 w-5" />, 'Hospitals')}
+                {renderSidebarItem('doctors', <Users className="h-5 w-5" />, 'Doctors')}
+                {renderSidebarItem('jobs', <Briefcase className="h-5 w-5" />, 'Jobs')}
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                {/* Mobile tabs */}
+                <div className="flex md:hidden overflow-x-auto gap-2 mb-6 pb-2">
+                    {['overview', 'approvals', 'hospitals', 'doctors', 'jobs'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium capitalize ${
+                                activeTab === tab
+                                    ? 'bg-[var(--color-primary)] text-white'
+                                    : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] border border-[var(--color-border)]'
+                            }`}
+                        >
+                            {tab}
+                            {tab === 'approvals' && pendingHospitals.length > 0 && ` (${pendingHospitals.length})`}
+                        </button>
+                    ))}
+                </div>
+
+                {activeTab === 'overview' && (
+                    <div className="fade-in">
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-8">Platform Overview</h1>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                            {[
+                                { label: 'Pending Approvals', value: pendingHospitals.length, icon: FileCheck, color: 'rose' },
+                                { label: 'Total Doctors', value: users?.length || 0, icon: Users, color: 'emerald' },
+                                { label: 'Verified Hospitals', value: verifiedHospitals.length, icon: Building2, color: 'blue' },
+                                { label: 'Jobs Posted', value: jobs?.length || 0, icon: Briefcase, color: 'amber' },
+                            ].map((stat, i) => (
+                                <div key={i} className="card card-hover p-6">
+                                    <div className="flex items-center">
+                                        <div className={`h-14 w-14 rounded-xl flex items-center justify-center mr-4 ${
+                                            stat.color === 'rose' ? 'bg-rose-100 text-rose-600' :
+                                            stat.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' :
+                                            stat.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                                            'bg-amber-100 text-amber-600'
+                                        }`}>
+                                            <stat.icon className="h-7 w-7" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-[var(--color-text-muted)]">{stat.label}</p>
+                                            <p className="text-3xl font-bold text-[var(--color-text-primary)]">{stat.value}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 )}
-            </button>
-        );
 
-        return (
-            <div className="flex h-[calc(100vh-64px)] bg-slate-50 overflow-hidden">
-                {/* Sidebar */}
-                <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col gap-2 overflow-y-auto hidden md:flex">
-                    <div className="flex items-center gap-3 mb-6 px-4">
-                        <ShieldCheck className="h-8 w-8 text-primary" />
-                        <h2 className="text-xl font-bold text-slate-900">Admin</h2>
+                {activeTab === 'approvals' && (
+                    <div className="fade-in">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Hospital Approvals</h1>
+                                <p className="text-sm text-[var(--color-text-secondary)] mt-1">Review and approve hospital accounts</p>
+                            </div>
+                            {pendingHospitals.length > 0 && (
+                                <span className="bg-rose-100 text-rose-700 font-bold px-4 py-2 rounded-full text-sm">
+                                    {pendingHospitals.length} Pending
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="card overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)]">
+                                        <tr className="text-[var(--color-text-secondary)] text-sm font-semibold whitespace-nowrap">
+                                            <th className="py-4 px-6">Hospital Name</th>
+                                            <th className="py-4 px-6">Email</th>
+                                            <th className="py-4 px-6">Location</th>
+                                            <th className="py-4 px-6 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--color-border)]">
+                                        {pendingHospitals.map(hospital => (
+                                            <tr key={hospital._id} className="hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
+                                                <td className="py-4 px-6 font-semibold text-[var(--color-text-primary)] whitespace-nowrap">{hospital.hospitalName}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{hospital.email}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{hospital.location}</td>
+                                                <td className="py-4 px-6 text-right whitespace-nowrap">
+                                                    <button
+                                                        onClick={() => handleApprove(hospital._id)}
+                                                        className="btn btn-primary text-sm"
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                        Approve
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {pendingHospitals.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-12 text-[var(--color-text-muted)]">
+                                                    No pending approvals
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    {renderSidebarItem('overview', <LayoutDashboard className="h-5 w-5" />, 'Overview')}
-                    {renderSidebarItem('approvals', <FileCheck className="h-5 w-5" />, 'Approvals', pendingHospitals.length)}
-                    {renderSidebarItem('hospitals', <Building2 className="h-5 w-5" />, 'Hospitals')}
-                    {renderSidebarItem('doctors', <Users className="h-5 w-5" />, 'Doctors')}
-                    {renderSidebarItem('jobs', <Briefcase className="h-5 w-5" />, 'Jobs')}
-                </aside>
+                )}
 
-                {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                    {/* Mobile tabs */}
-                    <div className="flex md:hidden overflow-x-auto gap-2 mb-6 pb-2">
-                        <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${activeTab === 'overview' ? 'bg-primary text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>Overview</button>
-                        <button onClick={() => setActiveTab('approvals')} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${activeTab === 'approvals' ? 'bg-primary text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>Approvals ({pendingHospitals.length})</button>
-                        <button onClick={() => setActiveTab('hospitals')} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${activeTab === 'hospitals' ? 'bg-primary text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>Hospitals</button>
-                        <button onClick={() => setActiveTab('doctors')} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${activeTab === 'doctors' ? 'bg-primary text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>Doctors</button>
-                        <button onClick={() => setActiveTab('jobs')} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${activeTab === 'jobs' ? 'bg-primary text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>Jobs</button>
+                {activeTab === 'hospitals' && (
+                    <div className="fade-in">
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-8">Verified Hospitals</h1>
+                        <div className="card overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)]">
+                                        <tr className="text-[var(--color-text-secondary)] text-sm font-semibold whitespace-nowrap">
+                                            <th className="py-4 px-6">Hospital Name</th>
+                                            <th className="py-4 px-6">Email</th>
+                                            <th className="py-4 px-6">Location</th>
+                                            <th className="py-4 px-6">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--color-border)]">
+                                        {verifiedHospitals.map(hospital => (
+                                            <tr key={hospital._id} className="hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
+                                                <td className="py-4 px-6 font-semibold text-[var(--color-text-primary)] whitespace-nowrap">{hospital.hospitalName}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{hospital.email}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{hospital.location}</td>
+                                                <td className="py-4 px-6 whitespace-nowrap">
+                                                    <span className="badge badge-success">
+                                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                        Verified
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {verifiedHospitals.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-12 text-[var(--color-text-muted)]">
+                                                    No verified hospitals yet
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
+                )}
 
-                    {activeTab === 'overview' && (
-                        <div className="animate-fade-in">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-8">Platform Overview</h1>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center">
-                                    <div className="bg-rose-50 p-4 rounded-full mr-4"><FileCheck className="h-6 w-6 text-rose-600" /></div>
-                                    <div><p className="text-sm text-slate-500 font-medium">Pending Approvals</p><p className="text-2xl font-bold text-slate-900">{pendingHospitals.length}</p></div>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center">
-                                    <div className="bg-emerald-50 p-4 rounded-full mr-4"><Users className="h-6 w-6 text-emerald-600" /></div>
-                                    <div><p className="text-sm text-slate-500 font-medium">Total Doctors</p><p className="text-2xl font-bold text-slate-900">{users?.length || 0}</p></div>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center">
-                                    <div className="bg-blue-50 p-4 rounded-full mr-4"><Building2 className="h-6 w-6 text-blue-600" /></div>
-                                    <div><p className="text-sm text-slate-500 font-medium">Verified Hospitals</p><p className="text-2xl font-bold text-slate-900">{verifiedHospitals.length}</p></div>
-                                </div>
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center">
-                                    <div className="bg-amber-50 p-4 rounded-full mr-4"><Briefcase className="h-6 w-6 text-amber-600" /></div>
-                                    <div><p className="text-sm text-slate-500 font-medium">Jobs Posted</p><p className="text-2xl font-bold text-slate-900">{jobs?.length || 0}</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'approvals' && (
-                        <div className="animate-fade-in">
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h1 className="text-2xl font-bold text-slate-900">Hospital Approvals</h1>
-                                    <p className="text-sm text-slate-500 mt-1">Review and approve hospital accounts.</p>
-                                </div>
-                                <span className="bg-rose-100 text-rose-700 font-bold px-3 py-1 rounded-full text-sm">{pendingHospitals.length} Pending</span>
-                            </div>
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
-                                            <tr className="text-slate-500 text-sm font-semibold whitespace-nowrap">
-                                                <th className="py-4 px-6">Hospital Name</th>
-                                                <th className="py-4 px-6">Email</th>
-                                                <th className="py-4 px-6">Location</th>
-                                                <th className="py-4 px-6 text-right">Actions</th>
+                {activeTab === 'doctors' && (
+                    <div className="fade-in">
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-8">Registered Doctors</h1>
+                        <div className="card overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)]">
+                                        <tr className="text-[var(--color-text-secondary)] text-sm font-semibold whitespace-nowrap">
+                                            <th className="py-4 px-6">Doctor Name</th>
+                                            <th className="py-4 px-6">Email</th>
+                                            <th className="py-4 px-6">Specialization</th>
+                                            <th className="py-4 px-6">Experience</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--color-border)]">
+                                        {(users || []).map(doctor => (
+                                            <tr key={doctor._id} className="hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
+                                                <td className="py-4 px-6 font-semibold text-[var(--color-text-primary)] whitespace-nowrap">{doctor.name}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{doctor.email}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{doctor.specialization}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{doctor.experience} Years</td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {pendingHospitals.map(hospital => (
-                                                <tr key={hospital._id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">{hospital.hospitalName}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{hospital.email}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{hospital.location}</td>
-                                                    <td className="py-4 px-6 text-right whitespace-nowrap">
-                                                        <button onClick={() => handleApprove(hospital._id)} className="text-white bg-primary hover:bg-indigo-700 text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-sm">
-                                                            Approve
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {pendingHospitals.length === 0 && (
-                                                <tr>
-                                                    <td colSpan="4" className="text-center py-12 text-slate-500">No pending approvals.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'hospitals' && (
-                        <div className="animate-fade-in">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-8">Verified Hospitals</h1>
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
-                                            <tr className="text-slate-500 text-sm font-semibold whitespace-nowrap">
-                                                <th className="py-4 px-6">Hospital Name</th>
-                                                <th className="py-4 px-6">Email</th>
-                                                <th className="py-4 px-6">Location</th>
-                                                <th className="py-4 px-6">Status</th>
+                                        ))}
+                                        {(!users || users.length === 0) && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-12 text-[var(--color-text-muted)]">
+                                                    No doctors registered yet
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {verifiedHospitals.map(hospital => (
-                                                <tr key={hospital._id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">{hospital.hospitalName}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{hospital.email}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{hospital.location}</td>
-                                                    <td className="py-4 px-6 whitespace-nowrap">
-                                                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold inline-flex items-center">
-                                                            <CheckCircle2 className="w-3 h-3 mr-1" /> Verified
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {verifiedHospitals.length === 0 && (
-                                                <tr>
-                                                    <td colSpan="4" className="text-center py-12 text-slate-500">No verified hospitals yet.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {activeTab === 'doctors' && (
-                        <div className="animate-fade-in">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-8">Registered Doctors</h1>
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
-                                            <tr className="text-slate-500 text-sm font-semibold whitespace-nowrap">
-                                                <th className="py-4 px-6">Doctor Name</th>
-                                                <th className="py-4 px-6">Email</th>
-                                                <th className="py-4 px-6">Specialization</th>
-                                                <th className="py-4 px-6">Experience</th>
+                {activeTab === 'jobs' && (
+                    <div className="fade-in">
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-8">All Jobs Posted</h1>
+                        <div className="card overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border)]">
+                                        <tr className="text-[var(--color-text-secondary)] text-sm font-semibold whitespace-nowrap">
+                                            <th className="py-4 px-6">Job Title</th>
+                                            <th className="py-4 px-6">Hospital</th>
+                                            <th className="py-4 px-6">Location</th>
+                                            <th className="py-4 px-6">Applicants</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[var(--color-border)]">
+                                        {(jobs || []).map(job => (
+                                            <tr key={job._id} className="hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
+                                                <td className="py-4 px-6 font-semibold text-[var(--color-text-primary)] whitespace-nowrap">{job.title}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{job.hospitalId?.hospitalName || 'Unknown'}</td>
+                                                <td className="py-4 px-6 text-[var(--color-text-secondary)] whitespace-nowrap">{job.location}</td>
+                                                <td className="py-4 px-6 whitespace-nowrap">
+                                                    <span className="px-3 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full text-xs font-bold">
+                                                        {job.applicants?.length || 0}
+                                                    </span>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {(users || []).map(doctor => (
-                                                <tr key={doctor._id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">{doctor.name}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{doctor.email}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{doctor.specialization}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{doctor.experience} Yrs</td>
-                                                </tr>
-                                            ))}
-                                            {(!users || users.length === 0) && (
-                                                <tr>
-                                                    <td colSpan="4" className="text-center py-12 text-slate-500">No doctors registered yet.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        ))}
+                                        {(!jobs || jobs.length === 0) && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-12 text-[var(--color-text-muted)]">
+                                                    No jobs posted yet
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    )}
-
-                    {activeTab === 'jobs' && (
-                        <div className="animate-fade-in">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-8">All Jobs Posted</h1>
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
-                                            <tr className="text-slate-500 text-sm font-semibold whitespace-nowrap">
-                                                <th className="py-4 px-6">Job Title</th>
-                                                <th className="py-4 px-6">Hospital</th>
-                                                <th className="py-4 px-6">Location</th>
-                                                <th className="py-4 px-6">Applicants</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {(jobs || []).map(job => (
-                                                <tr key={job._id} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="py-4 px-6 font-semibold text-slate-900 whitespace-nowrap">{job.title}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{job.hospitalId?.hospitalName || 'Unknown'}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">{job.location}</td>
-                                                    <td className="py-4 px-6 text-slate-600 whitespace-nowrap">
-                                                        <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">
-                                                            {job.applicants?.length || 0}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {(!jobs || jobs.length === 0) && (
-                                                <tr>
-                                                    <td colSpan="4" className="text-center py-12 text-slate-500">No jobs posted yet.</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </main>
-            </div>
-        );
-    } catch (error) {
-        console.error(error);
-        return <div>Error loading admin dashboard</div>;
-    }
+                    </div>
+                )}
+            </main>
+        </div>
+    );
 };
 
 export default AdminDashboard;

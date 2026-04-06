@@ -1,40 +1,134 @@
-import { Heart } from 'lucide-react';
+import { Heart, Briefcase, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
+    const currentYear = new Date().getFullYear();
+
+    const footerLinks = {
+        forDoctors: [
+            { label: 'Browse Jobs', href: '/jobs' },
+            { label: 'Create Profile', href: '/register' },
+            { label: 'Career Resources', href: '#' },
+            { label: 'Success Stories', href: '#' },
+        ],
+        forHospitals: [
+            { label: 'Post a Job', href: '/register' },
+            { label: 'Pricing Solutions', href: '#' },
+            { label: 'Enterprise', href: '#' },
+            { label: 'Success Stories', href: '#' },
+        ],
+        company: [
+            { label: 'About Us', href: '#' },
+            { label: 'Contact', href: '#' },
+            { label: 'Privacy Policy', href: '#' },
+            { label: 'Terms of Service', href: '#' },
+        ],
+    };
+
     return (
-        <footer className="bg-slate-900 text-slate-300 py-12 mt-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div className="col-span-1 md:col-span-2">
-                        <h2 className="text-2xl font-bold text-white mb-4">DrHire</h2>
-                        <p className="text-slate-400 mb-6 max-w-sm">
+        <footer className="bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] mt-auto">
+            {/* Main Footer */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+                    {/* Brand Column */}
+                    <div className="lg:col-span-2">
+                        <Link to="/" className="flex items-center gap-2 mb-6">
+                            <div className="h-10 w-10 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center">
+                                <Briefcase className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-2xl font-bold text-gradient">DrHire</span>
+                        </Link>
+
+                        <p className="text-[var(--color-text-secondary)] mb-6 max-w-sm">
                             Connecting brilliant healthcare professionals with leading medical institutions worldwide. Your career in medicine starts here.
                         </p>
+
+                        {/* Contact Info */}
+                        <div className="space-y-3">
+                            <a
+                                href="mailto:contact@drhire.com"
+                                className="flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                            >
+                                <Mail className="h-4 w-4" />
+                                contact@drhire.com
+                            </a>
+                            <a
+                                href="tel:+91-1234567890"
+                                className="flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                            >
+                                <Phone className="h-4 w-4" />
+                                +91-1234567890
+                            </a>
+                            <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
+                                <MapPin className="h-4 w-4" />
+                                New Delhi, India
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Links Columns */}
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">For Doctors</h3>
-                        <ul className="space-y-2">
-                            <li><a href="/jobs" className="hover:text-primary transition-colors">Browse Jobs</a></li>
-                            <li><a href="/register" className="hover:text-primary transition-colors">Create Profile</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Career Resources</a></li>
+                        <h3 className="font-bold text-[var(--color-text-primary)] mb-4">For Doctors</h3>
+                        <ul className="space-y-3">
+                            {footerLinks.forDoctors.map((link) => (
+                                <li key={link.label}>
+                                    <Link
+                                        to={link.href}
+                                        className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
+
                     <div>
-                        <h3 className="text-lg font-semibold text-white mb-4">For Hospitals</h3>
-                        <ul className="space-y-2">
-                            <li><a href="/register" className="hover:text-primary transition-colors">Post a Job</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Pricing Solutions</a></li>
-                            <li><a href="#" className="hover:text-primary transition-colors">Success Stories</a></li>
+                        <h3 className="font-bold text-[var(--color-text-primary)] mb-4">For Hospitals</h3>
+                        <ul className="space-y-3">
+                            {footerLinks.forHospitals.map((link) => (
+                                <li key={link.label}>
+                                    <Link
+                                        to={link.href}
+                                        className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 className="font-bold text-[var(--color-text-primary)] mb-4">Company</h3>
+                        <ul className="space-y-3">
+                            {footerLinks.company.map((link) => (
+                                <li key={link.label}>
+                                    <Link
+                                        to={link.href}
+                                        className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </div>
-                <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-sm">
-                        &copy; {new Date().getFullYear()} DrHire Platform. All rights reserved.
-                    </p>
-                    <p className="text-sm flex items-center mt-4 md:mt-0">
-                        Made with <Heart className="h-4 w-4 text-red-500 mx-1" fill="currentColor" /> for medical professionals
-                    </p>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="border-t border-[var(--color-border)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p className="text-[var(--color-text-muted)] text-sm">
+                            © {currentYear} DrHire Platform. All rights reserved.
+                        </p>
+
+                        <p className="text-[var(--color-text-muted)] text-sm flex items-center">
+                            Made with<Heart className="h-4 w-4 text-red-500 mx-1.5 fill-current" />for medical professionals
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>

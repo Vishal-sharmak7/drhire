@@ -1,39 +1,71 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Briefcase, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { LogOut, User, Briefcase, PlusCircle, LayoutDashboard, Sun, Moon, ChevronDown, Edit, Settings } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
     };
 
+    const getEditProfilePath = () => {
+        if (user?.role === 'doctor') return '/doctor/edit-profile';
+        if (user?.role === 'hospital') return '/hospital/edit-profile';
+        return '#';
+    };
+
     return (
-        <nav className="sticky top-0 z-50 glass">
+        <nav className="sticky top-0 z-50 glass-strong border-b border-[var(--color-border)]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
+                    {/* Logo */}
                     <div className="flex items-center">
-                        <Link to="/" className="flex items-center gap-2">
-                            <Briefcase className="h-8 w-8 text-primary" />
-                            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                        <Link to="/" className="flex items-center gap-2 group">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-[var(--color-primary)] rounded-xl blur opacity-40 group-hover:opacity-60 transition-opacity" />
+                                <div className="relative h-10 w-10 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center">
+                                    <Briefcase className="h-5 w-5 text-white" />
+                                </div>
+                            </div>
+                            <span className="text-2xl font-bold text-gradient">
                                 DrHire
                             </span>
                         </Link>
                     </div>
 
-                    <div className="hidden md:flex items-center space-x-8">
-                        <Link to="/jobs" className="text-secondary hover:text-primary transition-colors font-medium">
+                    {/* Navigation Links */}
+                    <div className="hidden md:flex items-center space-x-6">
+                        <Link
+                            to="/jobs"
+                            className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors font-medium relative group"
+                        >
                             Find Jobs
+                            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--color-primary)] transition-all group-hover:w-full" />
                         </Link>
 
                         {user ? (
                             <div className="flex items-center gap-4">
                                 <Link
                                     to={`/${user.role}/dashboard`}
-                                    className="flex items-center gap-2 text-secondary hover:text-primary transition-colors font-medium"
+                                    className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors font-medium"
                                 >
                                     <LayoutDashboard className="h-4 w-4" />
                                     Dashboard
@@ -41,50 +73,120 @@ const Navbar = () => {
                                 {user.role === 'hospital' && (
                                     <Link
                                         to="/hospital/post-job"
-                                        className="flex items-center gap-2 text-secondary hover:text-primary transition-colors font-medium"
+                                        className="flex items-center gap-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors font-medium"
                                     >
                                         <PlusCircle className="h-4 w-4" />
                                         Post Job
                                     </Link>
                                 )}
-                                {user.role === 'admin' && (
-                                    <Link
-                                        to="/admin/dashboard"
-                                        className="flex items-center gap-2 text-secondary hover:text-primary transition-colors font-medium"
-                                    >
-                                        <LayoutDashboard className="h-4 w-4" />
-                                        Admin Panel
-                                    </Link>
-                                )}
-                                <div className="flex items-center gap-3 ml-4 border-l pl-4 border-slate-300">
-                                    <span className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                                        <User className="h-4 w-4" />
-                                        {user.name}
+
+                                {/* Theme Toggle */}
+                                <button
+                                    onClick={toggleTheme}
+                                    className="theme-toggle"
+                                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                >
+                                    <span className="theme-toggle-icon sun">
+                                        <Sun className="h-5 w-5 text-amber-500" />
                                     </span>
+                                    <span className="theme-toggle-icon moon">
+                                        <Moon className="h-5 w-5 text-indigo-400" />
+                                    </span>
+                                </button>
+
+                                {/* User Dropdown */}
+                                <div className="relative ml-4 border-l border-[var(--color-border)] pl-4" ref={dropdownRef}>
                                     <button
-                                        onClick={handleLogout}
-                                        className="p-2 text-slate-500 hover:text-red-500 transition-colors"
+                                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                                        className="flex items-center gap-2 p-2 rounded-xl hover:bg-[var(--color-bg-tertiary)] transition-colors"
                                     >
-                                        <LogOut className="h-5 w-5" />
+                                        <div className="h-8 w-8 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-full flex items-center justify-center">
+                                            <User className="h-4 w-4 text-white" />
+                                        </div>
+                                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                                            {user.name || user.hospitalName || user.email?.split('@')[0]}
+                                        </span>
+                                        <ChevronDown className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                                     </button>
+
+                                    {dropdownOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 card p-2 fade-in shadow-xl">
+                                            {(user.role === 'doctor' || user.role === 'hospital') && (
+                                                <Link
+                                                    to={getEditProfilePath()}
+                                                    onClick={() => setDropdownOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                                                >
+                                                    <Edit className="h-4 w-4 text-[var(--color-text-muted)]" />
+                                                    Edit Profile
+                                                </Link>
+                                            )}
+                                            <Link
+                                                to={`/${user.role}/dashboard`}
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                                            >
+                                                <Settings className="h-4 w-4 text-[var(--color-text-muted)]" />
+                                                Dashboard
+                                            </Link>
+                                            <hr className="my-2 border-[var(--color-border)]" />
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                                Logout
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ) : (
                             <div className="flex items-center space-x-4">
+                                {/* Theme Toggle */}
+                                <button
+                                    onClick={toggleTheme}
+                                    className="theme-toggle"
+                                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                >
+                                    <span className="theme-toggle-icon sun">
+                                        <Sun className="h-5 w-5 text-amber-500" />
+                                    </span>
+                                    <span className="theme-toggle-icon moon">
+                                        <Moon className="h-5 w-5 text-indigo-400" />
+                                    </span>
+                                </button>
+
                                 <Link
                                     to="/login"
-                                    className="text-secondary hover:text-primary transition-colors font-medium px-4 py-2"
+                                    className="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors font-medium px-4 py-2"
                                 >
                                     Login
                                 </Link>
                                 <Link
                                     to="/register"
-                                    className="bg-primary hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                    className="btn btn-primary"
                                 >
                                     Sign Up
                                 </Link>
                             </div>
                         )}
+                    </div>
+
+                    {/* Mobile menu button */}
+                    <div className="md:hidden flex items-center gap-2">
+                        <button
+                            onClick={toggleTheme}
+                            className="theme-toggle"
+                            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                        >
+                            <span className="theme-toggle-icon sun">
+                                <Sun className="h-5 w-5 text-amber-500" />
+                            </span>
+                            <span className="theme-toggle-icon moon">
+                                <Moon className="h-5 w-5 text-indigo-400" />
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

@@ -46,7 +46,7 @@ export const getJobById = async (req, res) => {
 export const createJob = async (req, res) => {
     try {
         const hospital = await Hospital.findById(req.user.id || req.user._id);
-        if (!hospital || !hospital.verified) {
+        if (!hospital || hospital.status !== 'approved') {
             return res.status(403).json({ message: "Hospital not verified" });
         }
 

@@ -32,6 +32,7 @@ export const updateDoctorProfile = async (req, res) => {
             doctor.specialization = req.body.specialization || doctor.specialization;
             doctor.experience = req.body.experience || doctor.experience;
             doctor.licenseNumber = req.body.licenseNumber || doctor.licenseNumber;
+            doctor.email = req.body.email || doctor.email;
 
             if (req.body.skills) {
                 doctor.skills = req.body.skills.split(',').map(skill => skill.trim());
@@ -47,6 +48,8 @@ export const updateDoctorProfile = async (req, res) => {
                 name: updatedDoctor.name,
                 email: updatedDoctor.email,
                 specialization: updatedDoctor.specialization,
+                experience: updatedDoctor.experience,
+                licenseNumber: updatedDoctor.licenseNumber,
                 resume: updatedDoctor.resume,
                 skills: updatedDoctor.skills,
             });

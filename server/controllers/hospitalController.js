@@ -63,6 +63,7 @@ export const updateHospitalProfile = async (req, res) => {
             hospital.hospitalName = req.body.hospitalName || hospital.hospitalName;
             hospital.location = req.body.location || hospital.location;
             hospital.description = req.body.description || hospital.description;
+            hospital.email = req.body.email || hospital.email;
 
             const updatedHospital = await hospital.save();
             res.json({
@@ -71,7 +72,7 @@ export const updateHospitalProfile = async (req, res) => {
                 email: updatedHospital.email,
                 location: updatedHospital.location,
                 description: updatedHospital.description,
-                verified: updatedHospital.verified,
+                status: updatedHospital.status,
             });
         } else {
             res.status(404).json({ message: 'Hospital not found' });
