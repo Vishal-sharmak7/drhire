@@ -4,7 +4,9 @@ import bcrypt from 'bcryptjs';
 const doctorSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String },
+    authProvider: { type: String, enum: ['credentials', 'google'], default: 'credentials' },
+    providerId: { type: String },
     specialization: { type: String, required: true },
     experience: { type: Number, required: true },
     licenseNumber: { type: String, required: true },
@@ -18,6 +20,7 @@ const doctorSchema = new mongoose.Schema({
 });
 
 doctorSchema.methods.matchPassword = async function (enteredPassword) {
+    if (!this.password) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

@@ -35,8 +35,9 @@ export interface Job {
     hospitalName: string;
     email: string;
     location?: string;
+    description?: string;
   };
-  applicants?: string[];
+  applicants?: Array<string | { _id?: string }>;
   createdAt: string;
   updatedAt: string;
 }

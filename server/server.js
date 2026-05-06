@@ -11,16 +11,20 @@ import applicationRoutes from './routes/applicationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
-import dns from "node:dns/promises";
-dns.setServers(["1.1.1.1", "1.0.0.1"]);
+
 // Connect to database
 connectDB();
 
 const app = express();
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:5173',
+].filter(Boolean);
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Optional but good practice
     allowedHeaders: ['Content-Type', 'Authorization']    // Optional but good practice
